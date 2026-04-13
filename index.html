@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude verstehen — Calvin Hollywood</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0d0d0d;
+    --surface: #1A1A1A;
+    --gold: #C9A84C;
+    --yellow: #F0D080;
+    --white: #FFFFFF;
+    --gray: #888;
+    --dim: rgba(255,255,255,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; scroll-snap-type: y mandatory; overflow-y: scroll; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    cursor: default;
+  }
+
+  /* ── GRAIN OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.35;
+  }
+
+  /* ── SLIDE BASE ── */
+  .slide {
+    min-height: 100vh;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 60px 40px;
+    overflow: hidden;
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--yellow));
+    z-index: 1000;
+    transition: width 0.4s ease;
+    box-shadow: 0 0 12px var(--gold);
+  }
+
+  /* ── SLIDE COUNTER ── */
+  #slide-counter {
+    position: fixed;
+    bottom: 28px;
+    right: 36px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    color: var(--gold);
+    z-index: 1000;
+    opacity: 0.7;
+  }
+
+  /* ── NAV DOTS ── */
+  #nav-dots {
+    position: fixed;
+    left: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+  }
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gray);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .dot.active {
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
+    transform: scale(1.5);
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 6px;
+    color: var(--gold);
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3.5rem, 9vw, 8rem);
+    line-height: 0.92;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 5.5rem);
+    line-height: 0.95;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  h3 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(1.5rem, 3vw, 2.5rem);
+    letter-spacing: 1px;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  p, li {
+    font-size: clamp(0.9rem, 1.8vw, 1.1rem);
+    line-height: 1.75;
+    color: rgba(255,255,255,0.82);
+    max-width: 700px;
+  }
+
+  .gold { color: var(--gold); }
+  .yellow { color: var(--yellow); }
+
+  /* ── DECORATIVE LINE ── */
+  .deco-line {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    margin: 24px 0;
+  }
+
+  /* ── SLIDE 1: HERO ── */
+  #s1 {
+    background: radial-gradient(ellipse 80% 60% at 50% 40%, #1c1400 0%, var(--black) 70%);
+    text-align: center;
+  }
+  #s1::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 200px;
+    background: linear-gradient(to top, var(--black), transparent);
+  }
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 65%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -60%);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -60%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -60%) scale(1.08); }
+  }
+  .hero-content { position: relative; z-index: 2; }
+  .hero-subtitle {
+    font-size: clamp(1rem, 2.2vw, 1.3rem);
+    color: rgba(255,255,255,0.6);
+    margin-top: 24px;
+    letter-spacing: 1px;
+  }
+  .scroll-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--gold);
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+  }
+  .scroll-arrow {
+    width: 20px; height: 20px;
+    border-right: 2px solid var(--gold);
+    border-bottom: 2px solid var(--gold);
+    transform: rotate(45deg);
+  }
+  .brushstroke {
+    display: inline-block;
+    background: var(--yellow);
+    color: #111;
+    padding: 4px 18px 4px 14px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 4px;
+    clip-path: polygon(0 0, 98% 0, 100% 100%, 2% 100%);
+    margin-bottom: 32px;
+  }
+
+  /* ── SLIDE 2: TOKENS ── */
+  #s2 {
+    background: linear-gradient(135deg, #0d0d0d 0%, #151008 100%);
+    justify-content: center;
+    gap: 0;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    max-width: 1100px;
+    width: 100%;
+    align-items: center;
+  }
+  .token-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .token-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .token-chip {
+    background: var(--dim);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.7);
+    animation: fadeIn 0.5s ease both;
+  }
+  .token-chip.highlight {
+    background: rgba(201,168,76,0.15);
+    border-color: var(--gold);
+    color: var(--yellow);
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .word-to-token {
+    background: var(--surface);
+    border-left: 3px solid var(--gold);
+    padding: 20px 24px;
+    border-radius: 0 8px 8px 0;
+    margin-top: 24px;
+  }
+  .formula {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--gold);
+    letter-spacing: 3px;
+  }
+
+  /* ── SLIDE 3: VERBRAUCH ── */
+  #s3 {
+    background: #0d0d0d;
+  }
+  .cost-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    max-width: 1000px;
+    width: 100%;
+    margin-top: 32px;
+  }
+  .cost-card {
+    background: var(--surface);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 12px;
+    padding: 28px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .cost-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-4px);
+  }
+  .cost-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+  .cost-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+  .cost-bar {
+    height: 6px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    margin-top: 12px;
+    overflow: hidden;
+  }
+  .cost-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--yellow));
+  }
+  .cost-label-small {
+    font-size: 0.7rem;
+    color: var(--gray);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+
+  /* ── SLIDE 4: DREI LIMITS ── */
+  #s4 {
+    background: radial-gradient(ellipse 100% 80% at 50% 100%, #1a1000 0%, var(--black) 60%);
+  }
+  .limits-container {
+    max-width: 900px;
+    width: 100%;
+  }
+  .limit-item {
+    display: flex;
+    gap: 28px;
+    align-items: flex-start;
+    padding: 28px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+  }
+  .limit-item:last-child { border-bottom: none; }
+  .limit-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem;
+    line-height: 1;
+    color: rgba(201,168,76,0.25);
+    min-width: 60px;
+  }
+  .limit-content {}
+  .limit-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 1px;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+  .progress-mock {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 14px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 10px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 5px;
+    background: linear-gradient(90deg, var(--gold), var(--yellow));
+    transition: width 1.5s ease;
+  }
+  .progress-pct {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    color: var(--gold);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* ── SLIDE 5: RESET ── */
+  #s5 {
+    background: #0d0d0d;
+  }
+  .timeline {
+    max-width: 800px;
+    width: 100%;
+    position: relative;
+    margin-top: 32px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 24px;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--gold), rgba(201,168,76,0.1));
+  }
+  .tl-item {
+    display: flex;
+    gap: 28px;
+    align-items: flex-start;
+    padding: 0 0 40px 0;
+    padding-left: 64px;
+    position: relative;
+  }
+  .tl-dot {
+    position: absolute;
+    left: 16px;
+    top: 6px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 12px var(--gold);
+    border: 3px solid var(--black);
+  }
+  .tl-time {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    color: var(--gold);
+    letter-spacing: 2px;
+    min-width: 140px;
+  }
+
+  /* ── SLIDE 6: STOSSZEITEN ── */
+  #s6 {
+    background: linear-gradient(180deg, #0d0d0d 0%, #0f0b00 100%);
+  }
+  .clock-visual {
+    position: relative;
+    width: 260px;
+    height: 260px;
+    margin: 32px auto;
+  }
+  .clock-ring {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.08);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .clock-arc {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(
+      transparent 0deg,
+      transparent 210deg,
+      rgba(201,168,76,0.6) 210deg,
+      rgba(240,208,128,0.8) 270deg,
+      rgba(201,168,76,0.6) 330deg,
+      transparent 330deg,
+      transparent 360deg
+    );
+    filter: blur(2px);
+  }
+  .clock-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    color: var(--yellow);
+    text-align: center;
+    line-height: 1;
+  }
+  .clock-sublabel {
+    font-size: 0.7rem;
+    color: var(--gray);
+    letter-spacing: 3px;
+    text-align: center;
+    margin-top: 4px;
+  }
+  .time-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(201,168,76,0.1);
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    color: var(--yellow);
+    letter-spacing: 2px;
+    margin: 8px 4px;
+  }
+  .time-badge.danger {
+    background: rgba(201,168,76,0.2);
+    border-color: var(--gold);
+    box-shadow: 0 0 12px rgba(201,168,76,0.2);
+  }
+
+  /* ── SLIDE 7: FAUSTREGEL ── */
+  #s7 {
+    background: radial-gradient(ellipse 80% 70% at 50% 50%, #1a1200 0%, var(--black) 65%);
+    text-align: center;
+  }
+  .analogy-card {
+    background: var(--surface);
+    border: 1px solid rgba(201,168,76,0.3);
+    border-radius: 16px;
+    padding: 48px;
+    max-width: 760px;
+    width: 100%;
+    margin: 32px 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .analogy-card::before {
+    content: '"';
+    position: absolute;
+    top: -20px; left: 24px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12rem;
+    color: rgba(201,168,76,0.07);
+    line-height: 1;
+  }
+  .analogy-text {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    line-height: 1.9;
+    color: rgba(255,255,255,0.88);
+    position: relative;
+    z-index: 1;
+    font-style: italic;
+  }
+  .analogy-text strong {
+    color: var(--yellow);
+    font-style: normal;
+  }
+  .tank-visual {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    margin-top: 32px;
+  }
+  .tank {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .tank-bar {
+    width: 48px;
+    height: 100px;
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(201,168,76,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .tank-fill {
+    background: linear-gradient(to top, var(--gold), var(--yellow));
+    border-radius: 2px;
+    transition: height 2s ease;
+  }
+  .tank-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    color: var(--gray);
+    text-align: center;
+  }
+
+  /* ── SLIDE 8: TIPPS ── */
+  #s8 {
+    background: #0d0d0d;
+  }
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    max-width: 1000px;
+    width: 100%;
+    margin-top: 32px;
+  }
+  .tip-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 28px 24px;
+    border: 1px solid rgba(255,255,255,0.06);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .tip-card:hover {
+    border-color: rgba(201,168,76,0.4);
+    transform: translateY(-4px);
+  }
+  .tip-card.good::after {
+    content: '✓';
+    position: absolute;
+    top: 16px; right: 20px;
+    font-size: 1.2rem;
+    color: #4caf50;
+  }
+  .tip-card.bad::after {
+    content: '✗';
+    position: absolute;
+    top: 16px; right: 20px;
+    font-size: 1.2rem;
+    color: #f44336;
+  }
+
+  /* ── SLIDE 9: OUTRO ── */
+  #s9 {
+    background: radial-gradient(ellipse 90% 70% at 50% 50%, #1a1200 0%, #0d0d0d 70%);
+    text-align: center;
+  }
+  .outro-glow {
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  .motto {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 7vw, 6rem);
+    letter-spacing: 6px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--yellow) 50%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-top: 20px;
+  }
+  .by-calvin {
+    font-size: 0.8rem;
+    letter-spacing: 4px;
+    color: var(--gray);
+    margin-top: 32px;
+  }
+  .by-calvin span {
+    color: var(--gold);
+  }
+
+  /* ── FADE-IN ANIMATION ON SCROLL ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .two-col { grid-template-columns: 1fr; gap: 32px; }
+    .limit-item { flex-direction: column; gap: 12px; }
+    .limit-number { font-size: 2.5rem; min-width: auto; }
+    .tl-time { min-width: 100px; }
+    .analogy-card { padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar" style="width:0%"></div>
+<div id="slide-counter">01 / 09</div>
+<div id="nav-dots"></div>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 1 — HERO
+══════════════════════════════════════════════ -->
+<section class="slide" id="s1" data-slide="1">
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="label reveal reveal-delay-1">Calvin Hollywood präsentiert</div>
+    <h1 class="reveal reveal-delay-2">
+      CLAUDE<br><span class="gold">VERSTEHEN</span>
+    </h1>
+    <p class="hero-subtitle reveal reveal-delay-3">
+      Tokens · Limits · Resets — einfach erklärt für Einsteiger
+    </p>
+  </div>
+  <div class="scroll-hint">
+    SCROLL
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 2 — WAS SIND TOKENS
+══════════════════════════════════════════════ -->
+<section class="slide" id="s2" data-slide="2">
+  <div class="two-col">
+    <div>
+      <div class="label reveal">Grundlagen</div>
+      <h2 class="reveal reveal-delay-1">Die Ein&shy;heit: <span class="gold">Tokens</span></h2>
+      <div class="deco-line reveal reveal-delay-2"></div>
+      <p class="reveal reveal-delay-2">
+        Im Hintergrund zählt Claude keine Wörter — er zählt <strong class="gold">Tokens</strong>. Ein Token ist ungefähr ein Wortteil.
+      </p>
+      <div class="word-to-token reveal reveal-delay-3">
+        <div class="formula">1 WORT ≈ 1,3 TOKENS</div>
+        <p style="margin-top:8px; font-size:0.85rem; color: var(--gray);">
+          Was du siehst: <strong class="gold">Prozentbalken</strong> — keine genauen Zahlen.<br>
+          Anthropic zeigt bewusst keine exakten Token-Werte.
+        </p>
+      </div>
+    </div>
+    <div class="token-visual reveal reveal-delay-2">
+      <p style="font-size:0.75rem; letter-spacing:3px; color:var(--gray); margin-bottom:12px;">BEISPIEL: "Ich lerne heute Claude kennen"</p>
+      <div class="token-row">
+        <div class="token-chip highlight">Ich</div>
+        <div class="token-chip">▪</div>
+        <div class="token-chip highlight">ler</div>
+        <div class="token-chip highlight">ne</div>
+        <div class="token-chip">▪</div>
+        <div class="token-chip highlight">heu</div>
+        <div class="token-chip highlight">te</div>
+        <div class="token-chip">▪</div>
+        <div class="token-chip highlight">Claude</div>
+        <div class="token-chip">▪</div>
+        <div class="token-chip highlight">ken</div>
+        <div class="token-chip highlight">nen</div>
+      </div>
+      <p style="font-size:0.75rem; color:var(--gray); margin-top:16px;">= ca. 8 Tokens für 6 Wörter</p>
+
+      <div style="margin-top:32px; background: var(--surface); border-radius:12px; padding:20px; border:1px solid rgba(201,168,76,0.2);">
+        <p style="font-size:0.75rem; letter-spacing:3px; color:var(--gold); margin-bottom:16px;">DEIN VERBRAUCHSMESSER</p>
+        <div style="background:rgba(255,255,255,0.06); border-radius:6px; height:20px; overflow:hidden; margin-bottom:8px;">
+          <div style="width:14%; height:100%; background: linear-gradient(90deg, var(--gold), var(--yellow));"></div>
+        </div>
+        <p style="font-size:0.8rem; color:rgba(255,255,255,0.5);">Aktuelle Sitzung: <strong class="gold">14%</strong></p>
+        <div style="background:rgba(255,255,255,0.06); border-radius:6px; height:20px; overflow:hidden; margin:12px 0 8px;">
+          <div style="width:35%; height:100%; background: linear-gradient(90deg, var(--gold), var(--yellow));"></div>
+        </div>
+        <p style="font-size:0.8rem; color:rgba(255,255,255,0.5);">Wochenlimit: <strong class="gold">35%</strong></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 3 — VERBRAUCH
+══════════════════════════════════════════════ -->
+<section class="slide" id="s3" data-slide="3">
+  <div class="label reveal">Was kostet wie viel?</div>
+  <h2 class="reveal reveal-delay-1">Was verbraucht<br><span class="gold">viel — was wenig?</span></h2>
+  <div class="deco-line reveal reveal-delay-2"></div>
+  <div class="cost-grid">
+    <div class="cost-card reveal reveal-delay-1">
+      <div class="cost-icon">💬</div>
+      <h3>Langer Chat</h3>
+      <p style="font-size:0.85rem;">Je länger ein Gespräch, desto mehr muss Claude bei jeder neuen Antwort &quot;mitlesen&quot;. 50 Nachrichten = hoher Verbrauch.</p>
+      <div class="cost-bar"><div class="cost-fill" style="width:85%"></div></div>
+      <div class="cost-label-small">HOCH ████████░░</div>
+    </div>
+    <div class="cost-card reveal reveal-delay-2">
+      <div class="cost-icon">📄</div>
+      <h3>PDFs & Anhänge</h3>
+      <p style="font-size:0.85rem;">Ein 30-Seiten-PDF kann mehr Tokens verbrauchen als 20 normale Textfragen. Anhänge sind teuer.</p>
+      <div class="cost-bar"><div class="cost-fill" style="width:90%"></div></div>
+      <div class="cost-label-small">SEHR HOCH █████████░</div>
+    </div>
+    <div class="cost-card reveal reveal-delay-3">
+      <div class="cost-icon">🔗</div>
+      <h3>Tools & Connectors</h3>
+      <p style="font-size:0.85rem;">Slack, Notion, Drive, Canva — je mehr aktiv sind, desto token-intensiver wird jede Anfrage.</p>
+      <div class="cost-bar"><div class="cost-fill" style="width:80%"></div></div>
+      <div class="cost-label-small">HOCH ████████░░</div>
+    </div>
+    <div class="cost-card reveal reveal-delay-4">
+      <div class="cost-icon">🤖</div>
+      <h3>Modell-Wahl</h3>
+      <p style="font-size:0.85rem;"><strong class="gold">Opus</strong> = viel Verbrauch. <strong class="gold">Sonnet</strong> = mittel. <strong class="gold">Haiku</strong> = wenig. Gleiche Aufgabe, anderer Preis.</p>
+      <div class="cost-bar"><div class="cost-fill" style="width:60%"></div></div>
+      <div class="cost-label-small">VARIIERT ██████░░░░</div>
+    </div>
+    <div class="cost-card reveal reveal-delay-1">
+      <div class="cost-icon">🧠</div>
+      <h3>Extended Thinking</h3>
+      <p style="font-size:0.85rem;">Wenn an: Claude denkt länger nach — das kostet mehr Tokens. Nur einschalten wenn nötig.</p>
+      <div class="cost-bar"><div class="cost-fill" style="width:75%"></div></div>
+      <div class="cost-label-small">HOCH ███████░░░</div>
+    </div>
+    <div class="cost-card reveal reveal-delay-2">
+      <div class="cost-icon">💬</div>
+      <h3>Kurze Frage</h3>
+      <p style="font-size:0.85rem;">Frischer Chat, kurze Frage, kein PDF, kein Tool — das verbraucht am wenigsten. Ideal für schnelle Antworten.</p>
+      <div class="cost-bar"><div class="cost-fill" style="width:15%"></div></div>
+      <div class="cost-label-small">NIEDRIG █░░░░░░░░░</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 4 — DREI LIMITS
+══════════════════════════════════════════════ -->
+<section class="slide" id="s4" data-slide="4">
+  <div style="max-width:900px; width:100%;">
+    <div class="label reveal">Dein Verbrauchsmesser</div>
+    <h2 class="reveal reveal-delay-1">Die 3 <span class="gold">Limits</span><br>im Überblick</h2>
+    <div class="deco-line reveal reveal-delay-2"></div>
+    <div class="limits-container">
+      <div class="limit-item reveal reveal-delay-1">
+        <div class="limit-number">1</div>
+        <div class="limit-content">
+          <div class="limit-title">Aktuelle Sitzung — 5-Stunden-Fenster</div>
+          <p>Startet mit deiner ersten Nachricht und läuft genau 5 Stunden. Danach Reset auf 0%. Bei 14% wärst du 2,5 Stunden in deine Sitzung hinein.</p>
+          <div class="progress-mock">
+            <div class="progress-track"><div class="progress-fill" style="width:14%"></div></div>
+            <div class="progress-pct">14%</div>
+            <span style="font-size:0.75rem; color:var(--gray);">Reset in 2h 33min</span>
+          </div>
+        </div>
+      </div>
+      <div class="limit-item reveal reveal-delay-2">
+        <div class="limit-number">2</div>
+        <div class="limit-content">
+          <div class="limit-title">Alle Modelle — 7-Tage-Limit</div>
+          <p>Seit August 2025: ein wöchentliches Gesamtlimit über alle Claude-Produkte. Chat, Code, Cowork — alles zählt in einen gemeinsamen Topf.</p>
+          <div class="progress-mock">
+            <div class="progress-track"><div class="progress-fill" style="width:35%"></div></div>
+            <div class="progress-pct">35%</div>
+            <span style="font-size:0.75rem; color:var(--gray);">Reset in 22h 33min</span>
+          </div>
+        </div>
+      </div>
+      <div class="limit-item reveal reveal-delay-3">
+        <div class="limit-number">3</div>
+        <div class="limit-content">
+          <div class="limit-title">Nur Sonnet — separates Wochenlimit</div>
+          <p>Ein eigener Wochenzähler speziell für das Sonnet-Modell. Unabhängig vom allgemeinen Wochenlimit.</p>
+          <div class="progress-mock">
+            <div class="progress-track"><div class="progress-fill" style="width:4%"></div></div>
+            <div class="progress-pct">4%</div>
+            <span style="font-size:0.75rem; color:var(--gray);">Reset in 6d 14h</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 5 — RESET SYSTEM
+══════════════════════════════════════════════ -->
+<section class="slide" id="s5" data-slide="5">
+  <div class="label reveal">Der wichtigste Punkt</div>
+  <h2 class="reveal reveal-delay-1">Kein Reset<br><span class="gold">um Mitternacht</span></h2>
+  <div class="deco-line reveal reveal-delay-2"></div>
+  <div class="timeline reveal reveal-delay-2">
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-time">START</div>
+      <div>
+        <strong>Deine erste Nachricht</strong> beginnt die Uhr.
+        <p style="font-size:0.85rem; margin-top:4px;">Nicht Mitternacht. Nicht Montag. Sondern genau der Moment, in dem du anfängst.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-time">+ 5 STD</div>
+      <div>
+        <strong>Sitzungslimit läuft ab</strong> — Reset auf 0%
+        <p style="font-size:0.85rem; margin-top:4px;">Das kleine Limit ist wieder voll. Dein persönlicher Countdown, nicht ein globaler Takt.</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-time">+ 7 TAGE</div>
+      <div>
+        <strong>Wochenlimit läuft ab</strong> — Reset auf 0%
+        <p style="font-size:0.85rem; margin-top:4px;">Sieben Tage nach dem ersten Anstoßen — nicht jeden Montag um 00:00 Uhr.</p>
+      </div>
+    </div>
+  </div>
+  <div class="reveal reveal-delay-3" style="max-width:700px; background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.3); border-radius:10px; padding:20px 28px; margin-top:8px;">
+    <p><strong class="gold">Darum</strong> steht auf deinem Screenshot ein konkreter Countdown wie <strong>&quot;Zurücksetzung in 22 Std. 33 Min.&quot;</strong> — das ist dein persönlicher Timer, nicht ein globaler Fahrplan.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 6 — STOSSZEITEN
+══════════════════════════════════════════════ -->
+<section class="slide" id="s6" data-slide="6">
+  <div class="two-col">
+    <div>
+      <div class="label reveal">Seit März 2026</div>
+      <h2 class="reveal reveal-delay-1">Stoß&shy;zeiten <span class="gold">beachten</span></h2>
+      <div class="deco-line reveal reveal-delay-2"></div>
+      <p class="reveal reveal-delay-2">
+        Während der Stoßzeiten bewegst du dich <strong class="gold">schneller durch dein 5-Stunden-Limit</strong> als sonst. Die Wochenlimits bleiben unberührt.
+      </p>
+      <div style="margin-top:28px;" class="reveal reveal-delay-3">
+        <p style="font-size:0.75rem; letter-spacing:3px; color:var(--gray); margin-bottom:12px;">STOSSZEIT (SCHNELLERER VERBRAUCH)</p>
+        <div class="time-badge danger">🔴 14:00 — 20:00 Uhr DE</div>
+        <p style="margin-top:16px; font-size:0.85rem; color:rgba(255,255,255,0.6);">= 05–11 Uhr PT / 13–19 Uhr GMT</p>
+      </div>
+      <div style="margin-top:20px;" class="reveal reveal-delay-4">
+        <p style="font-size:0.75rem; letter-spacing:3px; color:var(--gray); margin-bottom:12px;">NORMALE ZEIT (EFFIZIENTER)</p>
+        <div class="time-badge">🟢 Abends ab 20 Uhr DE</div>
+        <div class="time-badge">🟢 Morgens bis 14 Uhr DE</div>
+      </div>
+    </div>
+    <div class="reveal reveal-delay-2" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+      <div class="clock-visual">
+        <div class="clock-ring">
+          <div class="clock-arc"></div>
+          <div class="clock-label">14–20<br>UHR</div>
+          <div class="clock-sublabel">STOSSZEIT</div>
+        </div>
+      </div>
+      <p style="text-align:center; font-size:0.85rem; color:rgba(255,255,255,0.5); margin-top:16px; max-width:280px;">Gleiche Arbeit — aber der Verbrauch-Balken füllt sich in diesem Fenster schneller.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 7 — FAUSTREGEL / ANALOGIE
+══════════════════════════════════════════════ -->
+<section class="slide" id="s7" data-slide="7">
+  <div class="outro-glow" style="opacity:0.5"></div>
+  <div class="label reveal" style="position:relative; z-index:2;">Die Kurzfassung</div>
+  <h2 class="reveal reveal-delay-1" style="position:relative; z-index:2; text-align:center;">Die <span class="gold">Faustregel</span></h2>
+  <div class="analogy-card reveal reveal-delay-2">
+    <p class="analogy-text">
+      Stell dir Claude vor wie eine <strong>Handy-Flat</strong> — nur dass die Einheit nicht Minuten oder Gigabyte heißt, sondern <strong>Tokens</strong>. Du siehst nur Prozent, keine genauen Zahlen. Du hast <strong>zwei Tanks</strong>: einen kleinen für die nächsten <strong>5 Stunden</strong> und einen großen für die ganze <strong>Woche</strong>. Beide füllen sich von selbst wieder auf — aber nicht um Mitternacht, sondern genau <strong>5 Stunden bzw. 7 Tage</strong> nach deiner ersten Nachricht. Lange Chats, <strong>PDFs</strong> und aktive Tools wie <strong>Slack oder Drive</strong> verbrauchen am meisten.
+    </p>
+  </div>
+  <div class="tank-visual reveal reveal-delay-3">
+    <div class="tank">
+      <div class="tank-bar"><div class="tank-fill" style="height:86%"></div></div>
+      <div class="tank-label">5H TANK<br><span style="color:var(--gold)">86%</span></div>
+    </div>
+    <div style="display:flex; align-items:center; font-family:'Bebas Neue'; font-size:2rem; color:rgba(255,255,255,0.2);">+</div>
+    <div class="tank">
+      <div class="tank-bar"><div class="tank-fill" style="height:65%"></div></div>
+      <div class="tank-label">WOCHEN<br><span style="color:var(--gold)">TANK</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 8 — PROFI TIPPS
+══════════════════════════════════════════════ -->
+<section class="slide" id="s8" data-slide="8">
+  <div class="label reveal">So sparst du Tokens</div>
+  <h2 class="reveal reveal-delay-1">Profi-<span class="gold">Tipps</span></h2>
+  <div class="deco-line reveal reveal-delay-2"></div>
+  <div class="tips-grid">
+    <div class="tip-card good reveal reveal-delay-1">
+      <h3>Neuer Chat</h3>
+      <p>Starte für jedes neue Thema einen frischen Chat. So trägt Claude nicht den kompletten Verlauf eines langen Gesprächs mit.</p>
+    </div>
+    <div class="tip-card good reveal reveal-delay-2">
+      <h3>Kleines Modell</h3>
+      <p>Für einfache Aufgaben Haiku oder Sonnet wählen. Opus nur wenn wirklich nötig — z.B. für komplexe Code-Reviews.</p>
+    </div>
+    <div class="tip-card good reveal reveal-delay-3">
+      <h3>Abends arbeiten</h3>
+      <p>Nach 20 Uhr (DE-Zeit) bist du außerhalb der Stoßzeiten. Gleiche Arbeit verbraucht weniger vom Sitzungslimit.</p>
+    </div>
+    <div class="tip-card bad reveal reveal-delay-1">
+      <h3>Nicht: Alles offen</h3>
+      <p>Nicht alle Connectors gleichzeitig aktiviert lassen. Slack + Notion + Drive + Canva in einer Anfrage = hoher Grundverbrauch.</p>
+    </div>
+    <div class="tip-card bad reveal reveal-delay-2">
+      <h3>Nicht: PDF bei jeder Frage</h3>
+      <p>Wenn du schon einmal ein PDF analysiert hast, fass die Ergebnisse zusammen statt das PDF immer wieder neu hochzuladen.</p>
+    </div>
+    <div class="tip-card good reveal reveal-delay-3">
+      <h3>Extended Thinking AUS</h3>
+      <p>Nur einschalten wenn du wirklich tiefes Denken brauchst. Für alltägliche Aufgaben ist es ein unnötiger Token-Fressser.</p>
+    </div>
+  </div>
+</section>
+
+
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const progressBar = document.getElementById('progress-bar');
+  const slideCounter = document.getElementById('slide-counter');
+  const navDotsContainer = document.getElementById('nav-dots');
+
+  // Create nav dots
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => {
+      slides[i].scrollIntoView({ behavior: 'smooth' });
+    });
+    navDotsContainer.appendChild(dot);
+  });
+
+  const dots = document.querySelectorAll('.dot');
+
+  // Intersection Observer for slide tracking
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const slideEl = entry.target;
+        const idx = Array.from(slides).indexOf(slideEl);
+        const total = slides.length;
+
+        // Progress bar
+        const pct = ((idx) / (total - 1)) * 100;
+        progressBar.style.width = pct + '%';
+
+        // Counter
+        slideCounter.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+
+        // Dots
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+
+        // Reveal elements in this slide
+        const reveals = slideEl.querySelectorAll('.reveal');
+        reveals.forEach((el, i) => {
+          setTimeout(() => el.classList.add('visible'), i * 80);
+        });
+      }
+    });
+  }, { threshold: 0.5 });
+
+  slides.forEach(s => observer.observe(s));
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    const current = Math.round(window.scrollY / window.innerHeight);
+    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+      e.preventDefault();
+      if (current < slides.length - 1) slides[current + 1].scrollIntoView({ behavior: 'smooth' });
+    }
+    if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+      e.preventDefault();
+      if (current > 0) slides[current - 1].scrollIntoView({ behavior: 'smooth' });
+    }
+  });
+
+  // Animate progress fills when visible
+  const progressFills = document.querySelectorAll('.progress-fill');
+  const fillObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.width = entry.target.style.width; // trigger reflow
+      }
+    });
+  }, { threshold: 0.5 });
+  progressFills.forEach(f => fillObserver.observe(f));
+</script>
+</body>
+</html>
